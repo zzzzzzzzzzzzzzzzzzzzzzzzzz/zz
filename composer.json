@@ -1,0 +1,21 @@
+{
+    "name": "zzzzzzzzzzzzzzzzzzzzzzzzzz/zz",
+    "description": "override any composer library",
+    "license": "MIT",
+	"authors": [
+		{
+			"name": "Hissez Haut",
+			"email": "chris@hissez-haut.com",
+			"homepage": "http://hissez-haut.com"
+		}
+	],
+    "require": {
+        "php": "^5.3.3 || ^7.0"
+    },
+   	"autoload": {
+		"psr-4": {
+			"Zz\\": "src/Zz/"
+		}
+	},
+
+}
