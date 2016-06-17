@@ -1,0 +1,24 @@
+#!/bin/bash
+
+echo ""
+echo ""
+
+echo "git status"
+
+echo ""
+echo "-------------------"
+echo ""
+
+echo "git add ."
+echo "git commit -m \"xxxxxxxx\""
+
+echo ""
+echo "-------------------"
+echo ""
+
+echo "git log"
+echo "git tag -a v0.0. -m 'version 0.0.' 1f18d3b76ec10b"
+echo "git push origin --tags"
+
+echo ""
+echo ""
