@@ -6,25 +6,63 @@ use Composer\Autoload\ClassLoader;
 
 class Zz {
 
+	use Utility;
+
 	private $namespace;
 	private $core;
 	private $override;
-
-	private $map = [];
+	private $vendor;
+	private $composer_json;
+	private $origin;
+	private $blacklist = [];
 
 	public function __construct () {
 		$this->namespace = 'App';
 		$this->core = 'Core';
-		$this->override = 'App\Override\\';
+		$this->override = 'App\Override';
+		$this->vendor = 'vendor';
+		$this->composer_json = 'composer.json';
+		$this->origin = '.origin';
+		$this->blacklist = [
+			'ClassLoader',
+		];
 
 		spl_autoload_register( function( $class ) {
-			echo "perso - $class <br>";
+			// echo "perso - $class <br>\n";
 			$this->loader( $class );
 		}, false, true );
 	}
 
+	public function override ( $class ) {
+		if ( $file = $this->findOverride( $class ) ) {
+// echo "<br>--------- over -----------{$class} - {$file} <br>\n";
+			if ( $this->copyExistingPackage( $class ) ) {
+				includeFile( $file );
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public function core ( $class ) {
+		$override = $this->core2override( $class );
+
+		list( $source, $destination ) = $this->infos( $override );
+		$core = $this->buildCore( $destination );
+
+		if ( $file = $this->findOverride( $override ) ) {
+// echo "--------- core -----------{$class}{$file} <br>\n";
+
+			includeFile( $destination->file );
+			
+			return true;
+		}
+	}
+
 	public function loader ( $class ) {
-		if ( $this->is_it_classLoader( $class ) ) {
+		if ( $this->is_it_blacklisted( $class ) ) {
 			return false;
 		}
 
@@ -36,92 +74,18 @@ class Zz {
 			return $this->core( $class );
 		}
 
-		$this->override( $class );
-
-		return true;
+		return $this->override( $class );
 	}
-
-	public function override ( $class ) {
-		$override = "{$this->override}{$class}";
-
-		$this->map[$class] = $override;
-
-        if ( $file = $this->findFile( $override ) ) {
-            includeFile( $file );
-
-            return true;
-        }
-    }
-
-	public function core ( $class ) {
-		$class = str_replace( $this->core.'\\', '', $class );
-
-		$namespace = $this->getNamespace( $class );
-		$name = $this->getName( $class );
-
-		$php = "
-namespace {$this->core}\\{$namespace};
-
-use \\{$class} as Origine;
-
-class {$name} extends Origine {}";
-		
-		$loader = new ClassLoader;
-        $loader->loadClass( $class );
-
-		// eval( $php );
-		echo( "\n"."\n"."\n".$php."\n"."\n"."\n" );
-		
-		return true;
-    }
-
-    public function getNamespace ( $class ) {
-    	$explode = explode( '\\', $class );
-
-    	array_pop( $explode );
-
-    	return join( '\\', $explode );
-    }
-
-    public function getName ( $class ) {
-    	$explode = explode( '\\', $class );
-
-    	return array_pop( $explode );
-    }
 
 	public function findFile ( $class ) {
 		$file = str_replace( [ 'App\\', '\\' ], [ '', '/' ], $class );
 		$file = app_path( $file ).'.php';
 
-        return file_exists( $file ) ? $file : false;
-    }
-
-	public function is_it_already_in_app_folder ( $class ) {
-		$explode = explode( '\\', $class );
-
-		if ( count( $explode ) > 1 && $explode[0] == $this->namespace ) {
-			return true;
-		}
-		
-		return false;
-	}
-
-	public function is_it_core_folder ( $class ) {
-		$explode = explode( '\\', $class );
-
-		if ( count( $explode ) > 1 && $explode[0] == $this->core ) {
-			return true;
-		}
-		
-		return false;
-	}
-
-	public function is_it_classLoader ( $class ) {
-		return $class == 'ClassLoader';
+		return file_exists( $file ) ? $file : false;
 	}
 
 }
 
 function includeFile( $file ) {
-    include $file;
+	include $file;
 }
